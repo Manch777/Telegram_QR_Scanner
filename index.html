@@ -1,69 +1,167 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>Сканер QR-кодов</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    h2 {
-      margin-bottom: 10px;
-    }
-    #preview {
-      margin: 15px 0;
-      font-size: 16px;
-      color: #333;
-    }
-    video {
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      width: 800px; 
-      height: auto; 
-    }
-  </style>
-  <script type="module">
-    import { BrowserQRCodeReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm";
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    const previewElem = document.getElementById("preview");
-    const videoElem = document.getElementById("video-preview");
+    <title>Сканер QR-кодов</title>
 
-    async function startScanner() {
-      try {
-        const devices = await BrowserQRCodeReader.listVideoInputDevices();
-
-        if (devices.length === 0) {
-          previewElem.innerText = "❌ Камера недоступна.";
-          return;
+    <style>
+        * {
+            box-sizing: border-box;
         }
 
-        previewElem.innerText = "Камера активна. Наведите на QR-код...";
+        body {
+            margin: 0;
+            padding: 24px 16px;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
 
-        const codeReader = new BrowserQRCodeReader();
-        const result = await codeReader.decodeOnceFromVideoDevice(undefined, videoElem);
+        main {
+            width: 100%;
+            max-width: 720px;
+            margin: 0 auto;
+            text-align: center;
+        }
 
-        const userId = result.getText();
-        previewElem.innerText = `✅ QR: ${userId}`;
+        h1 {
+            margin: 0 0 12px;
+            font-size: 28px;
+        }
 
-        // редирект в Telegram бота
-        const botUsername = "Jajda_com_bot"; // ← здесь имя твоего бота (без @)
-        window.location.href = `https://t.me/${botUsername}?start=${userId}`;
+        #preview {
+            min-height: 24px;
+            margin: 0 0 16px;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #444;
+        }
 
-        await codeReader.reset();
-      } catch (error) {
-        console.error("Ошибка:", error);
-        previewElem.innerText = "❌ Ошибка сканирования: " + error.message;
-      }
-    }
+        #video-preview {
+            display: block;
+            width: 100%;
+            max-width: 720px;
+            height: auto;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            background: #000;
+        }
 
-    startScanner();
-  </script>
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            #video-preview {
+                border-radius: 8px;
+            }
+        }
+    </style>
 </head>
+
 <body>
-  <h2>Сканируйте QR-код</h2>
-  <div id="preview">Загрузка камеры...</div>
-  <video id="video-preview" width="300" autoplay muted playsinline></video>
+    <main>
+        <h1>Сканируйте QR-код</h1>
+
+        <div
+            id="preview"
+            role="status"
+            aria-live="polite"
+        >
+            Загрузка камеры...
+        </div>
+
+        <video
+            id="video-preview"
+            autoplay
+            muted
+            playsinline
+        ></video>
+    </main>
+
+    <script type="module">
+        import { BrowserQRCodeReader } from "https://cdn.jsdelivr.net/npm/@zxing/browser@0.0.10/+esm";
+
+        const previewElement = document.getElementById("preview");
+        const videoElement = document.getElementById("video-preview");
+
+        const botUsername = "Jajda_com_bot";
+
+        async function startScanner() {
+            try {
+                const devices =
+                    await BrowserQRCodeReader.listVideoInputDevices();
+
+                if (devices.length === 0) {
+                    previewElement.textContent =
+                        "❌ Камера не найдена.";
+
+                    return;
+                }
+
+                previewElement.textContent =
+                    "Камера активна. Наведите на QR-код...";
+
+                const codeReader = new BrowserQRCodeReader();
+
+                const result =
+                    await codeReader.decodeOnceFromVideoDevice(
+                        undefined,
+                        videoElement
+                    );
+
+                const qrPayload = result.getText().trim();
+
+                if (!qrPayload) {
+                    previewElement.textContent =
+                        "❌ QR-код не содержит данных.";
+
+                    return;
+                }
+
+                previewElement.textContent =
+                    `✅ QR-код считан: ${qrPayload}`;
+
+                // Forward the scanned payload to the Telegram bot.
+                const telegramUrl =
+                    `https://t.me/${botUsername}?start=${encodeURIComponent(qrPayload)}`;
+
+                window.location.href = telegramUrl;
+
+            } catch (error) {
+                console.error("QR scanner error:", error);
+
+                if (
+                    error.name === "NotAllowedError" ||
+                    error.name === "PermissionDeniedError"
+                ) {
+                    previewElement.textContent =
+                        "❌ Нет доступа к камере. Разрешите доступ в настройках браузера.";
+                } else if (
+                    error.name === "NotFoundError" ||
+                    error.name === "DevicesNotFoundError"
+                ) {
+                    previewElement.textContent =
+                        "❌ Камера не найдена.";
+                } else {
+                    previewElement.textContent =
+                        "❌ Не удалось запустить сканер QR-кодов.";
+                }
+            }
+        }
+
+        startScanner();
+    </script>
 </body>
 </html>
