@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta
@@ -7,7 +7,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Сканер QR-кодов</title>
+    <title>QR Code Scanner</title>
 
     <style>
         * {
@@ -72,14 +72,14 @@
 
 <body>
     <main>
-        <h1>Сканируйте QR-код</h1>
+        <h1>Scan a QR Code</h1>
 
         <div
             id="preview"
             role="status"
             aria-live="polite"
         >
-            Загрузка камеры...
+            Loading camera...
         </div>
 
         <video
@@ -105,13 +105,13 @@
 
                 if (devices.length === 0) {
                     previewElement.textContent =
-                        "❌ Камера не найдена.";
+                        "❌ Camera not found.";
 
                     return;
                 }
 
                 previewElement.textContent =
-                    "Камера активна. Наведите на QR-код...";
+                    "Camera is active. Point it at a QR code...";
 
                 const codeReader = new BrowserQRCodeReader();
 
@@ -125,13 +125,13 @@
 
                 if (!qrPayload) {
                     previewElement.textContent =
-                        "❌ QR-код не содержит данных.";
+                        "❌ The QR code contains no data.";
 
                     return;
                 }
 
                 previewElement.textContent =
-                    `✅ QR-код считан: ${qrPayload}`;
+                    `✅ QR code scanned: ${qrPayload}`;
 
                 // Forward the scanned payload to the Telegram bot.
                 const telegramUrl =
@@ -147,16 +147,16 @@
                     error.name === "PermissionDeniedError"
                 ) {
                     previewElement.textContent =
-                        "❌ Нет доступа к камере. Разрешите доступ в настройках браузера.";
+                        "❌ Camera access denied. Please allow camera access in your browser settings.";
                 } else if (
                     error.name === "NotFoundError" ||
                     error.name === "DevicesNotFoundError"
                 ) {
                     previewElement.textContent =
-                        "❌ Камера не найдена.";
+                        "❌ Camera not found.";
                 } else {
                     previewElement.textContent =
-                        "❌ Не удалось запустить сканер QR-кодов.";
+                        "❌ Unable to start the QR code scanner.";
                 }
             }
         }
